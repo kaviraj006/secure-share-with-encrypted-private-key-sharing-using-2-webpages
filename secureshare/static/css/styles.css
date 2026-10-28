@@ -1,0 +1,869 @@
+/* ==========================================================================
+   SECURESHARE // FILE VAULT — CINEMATIC DARK-GREEN HACKER DESIGN SYSTEM
+   ========================================================================== */
+
+:root {
+    /* Exact Required Color Palette */
+    --bg-main: #050806;
+    --bg-secondary: #0A100C;
+    --panel-bg: #0D1510;
+    --raised-panel: #121C15;
+    --dark-green: #163D24;
+    --primary-green: #27864A;
+    --bright-green: #39FF14;
+    --success-green: #46D369;
+    --text-main: #E7FBEA;
+    --text-secondary: #91A297;
+    --border: #263B2C;
+    --error: #FF4D5D;
+    --warning: #FFBF47;
+
+    /* Technical Derivatives & Overlays */
+    --bright-green-dim: rgba(57, 255, 20, 0.12);
+    --bright-green-glow: rgba(57, 255, 20, 0.28);
+    --error-dim: rgba(255, 77, 93, 0.12);
+    --warning-dim: rgba(255, 191, 71, 0.12);
+    --border-hover: #39FF14;
+
+    /* Typography */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+
+    /* Strict Boxy Geometry — No rounded pills, no giant curves */
+    --radius-none: 0px;
+    --radius-sm: 2px;
+    --radius-md: 2px;
+    --radius-lg: 2px;
+    
+    /* Layout Constants */
+    --sidebar-width: 260px;
+    --topbar-height: 48px;
+    --footer-height: 38px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    height: 100%;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-x: hidden;
+}
+
+/* Subtle Technical Grid + CRT Scanline texture */
+body.vault-body {
+    background-color: var(--bg-main);
+    background-image: 
+        linear-gradient(to right, rgba(38, 59, 44, 0.18) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(38, 59, 44, 0.18) 1px, transparent 1px);
+    background-size: 28px 28px;
+    background-attachment: fixed;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Typography & Monospace Accents */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-main);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.3rem; }
+h3 { font-size: 1.1rem; }
+h4 { font-size: 0.95rem; }
+
+.mono {
+    font-family: var(--font-mono);
+}
+
+.neon-text {
+    color: var(--bright-green);
+    text-shadow: 0 0 8px var(--bright-green-glow);
+}
+
+.dim-text {
+    color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   APP SHELL LAYOUT: BOX-CORNERED SIDEBAR + WORKSPACE
+   ========================================================================== */
+
+.vault-shell {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+}
+
+/* 1. Boxy Left Sidebar */
+aside.vault-sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    z-index: 100;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+/* Sidebar Branding */
+.sidebar-brand {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel-bg);
+}
+
+.brand-badge-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--text-main);
+}
+
+.brand-icon-box {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border-hover);
+    background: var(--dark-green);
+    color: var(--bright-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.brand-text-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-title {
+    font-family: var(--font-mono);
+    font-weight: 800;
+    font-size: 0.98rem;
+    letter-spacing: 0.08em;
+    color: var(--text-main);
+}
+
+.brand-subtitle {
+    font-family: var(--font-mono);
+    font-size: 0.70rem;
+    color: var(--bright-green);
+    letter-spacing: 0.05em;
+}
+
+/* Sidebar Live Status Card */
+.sidebar-status-box {
+    margin: 12px 14px;
+    padding: 10px 12px;
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+}
+
+.status-node-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.status-node-row:last-child {
+    margin-bottom: 0;
+}
+
+.status-indicator-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--bright-green);
+    margin-right: 6px;
+    box-shadow: 0 0 6px var(--bright-green);
+}
+
+.status-indicator-dot.offline {
+    background: var(--error);
+    box-shadow: 0 0 6px var(--error);
+}
+
+/* Navigation Section Headings */
+.sidebar-section-title {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 12px 16px 4px 16px;
+}
+
+/* Navigation Links */
+.sidebar-nav-list {
+    list-style: none;
+    padding: 4px 0;
+    flex: 1;
+}
+
+.sidebar-nav-item {
+    margin-bottom: 2px;
+}
+
+.sidebar-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 16px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    letter-spacing: 0.03em;
+    border-left: 2px solid transparent;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.sidebar-nav-link:hover {
+    background: var(--raised-panel);
+    color: var(--text-main);
+    border-left-color: var(--border);
+}
+
+.sidebar-nav-link.active {
+    background: var(--panel-bg);
+    color: var(--bright-green);
+    border-left-color: var(--bright-green);
+    font-weight: 600;
+}
+
+.nav-idx {
+    color: var(--text-secondary);
+    font-size: 0.74rem;
+    opacity: 0.8;
+}
+
+.sidebar-nav-link.active .nav-idx {
+    color: var(--bright-green);
+}
+
+/* Sidebar Operator / Identity Panel */
+.sidebar-operator-box {
+    padding: 12px 14px;
+    background: var(--panel-bg);
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+}
+
+.operator-label {
+    font-family: var(--font-mono);
+    font-size: 0.70rem;
+    color: var(--text-secondary);
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.operator-id {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--bright-green);
+    word-break: break-all;
+    margin-bottom: 8px;
+}
+
+/* 2. Workspace Area */
+.vault-workspace {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* Top Telemetry Bar */
+header.vault-topbar {
+    height: var(--topbar-height);
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.topbar-path {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.topbar-path-segment {
+    color: var(--text-main);
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+}
+
+.topbar-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    background: var(--panel-bg);
+    color: var(--text-secondary);
+}
+
+.topbar-pill.active {
+    border-color: var(--primary-green);
+    color: var(--bright-green);
+}
+
+/* Main Content Area */
+main.vault-main {
+    flex: 1;
+    padding: 24px;
+    max-width: 1280px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* Terminal Footer */
+footer.vault-footer {
+    height: var(--footer-height);
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+}
+
+.footer-terminal-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.footer-sep {
+    color: var(--dark-green);
+}
+
+.prompt-symbol {
+    color: var(--bright-green);
+    font-weight: 700;
+}
+
+/* Mobile Drawer Hamburger Button */
+.mobile-nav-toggle {
+    display: none;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+/* ==========================================================================
+   BOXY PANELS, CARDS & CONTAINERS
+   ========================================================================== */
+
+.card, .panel {
+    background-color: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-none);
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.card-raised {
+    background-color: var(--raised-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-none);
+}
+
+.card-header, .panel-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--raised-panel);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.card-title, .panel-title {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-body, .panel-body {
+    padding: 16px;
+}
+
+.card-glow-border {
+    border-color: var(--primary-green);
+    box-shadow: 0 0 1px var(--bright-green);
+}
+
+/* Grid Layout Utilities */
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+/* Metric / Telemetry Stat Box */
+.stat-box {
+    background: var(--raised-panel);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+}
+
+.stat-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--bright-green);
+}
+
+.stat-subtext {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+/* ==========================================================================
+   BOXY ACTION BUTTONS (NO ROUNDED PILLS)
+   ========================================================================== */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 16px;
+    font-family: var(--font-mono);
+    font-size: 0.80rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-radius: var(--radius-none);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    border: 1px solid transparent;
+}
+
+.btn:focus-visible {
+    outline: 2px solid var(--bright-green);
+    outline-offset: 1px;
+}
+
+.btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn-primary {
+    background-color: var(--primary-green);
+    color: var(--text-main);
+    border-color: var(--bright-green);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: var(--bright-green);
+    color: #050806;
+    box-shadow: 0 0 10px var(--bright-green-glow);
+}
+
+.btn-secondary {
+    background-color: var(--raised-panel);
+    color: var(--text-main);
+    border-color: var(--border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    border-color: var(--bright-green);
+    color: var(--bright-green);
+    background-color: var(--dark-green);
+}
+
+.btn-danger {
+    background-color: var(--error-dim);
+    color: var(--error);
+    border-color: var(--error);
+}
+
+.btn-danger:hover:not(:disabled) {
+    background-color: var(--error);
+    color: #050806;
+}
+
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 0.72rem;
+}
+
+.btn-block {
+    width: 100%;
+}
+
+/* ==========================================================================
+   FORM INPUTS & LABELS
+   ========================================================================== */
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 6px;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.form-input, .form-select {
+    width: 100%;
+    padding: 10px 12px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-none);
+    color: var(--text-main);
+    font-family: var(--font-mono);
+    font-size: 0.84rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-input:focus, .form-select:focus {
+    outline: none;
+    border-color: var(--bright-green);
+    box-shadow: 0 0 6px var(--bright-green-glow);
+    background-color: #0c150f;
+}
+
+.form-input::placeholder {
+    color: #3b5444;
+}
+
+.input-with-icon {
+    position: relative;
+    display: flex;
+}
+
+.input-with-icon .form-input {
+    padding-right: 40px;
+}
+
+.input-toggle-btn {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 38px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.input-toggle-btn:hover {
+    color: var(--bright-green);
+}
+
+/* ==========================================================================
+   ALIGNED TECHNICAL TABLES
+   ========================================================================== */
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+}
+
+.table-tech {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    text-align: left;
+}
+
+.table-tech th {
+    background-color: var(--raised-panel);
+    color: var(--text-secondary);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+.table-tech td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-main);
+}
+
+.table-tech tr:last-child td {
+    border-bottom: none;
+}
+
+.table-tech tbody tr:hover {
+    background-color: var(--raised-panel);
+}
+
+/* ==========================================================================
+   STATUS BANNERS, ALERTS & BADGES
+   ========================================================================== */
+
+.alert {
+    padding: 12px 16px;
+    border-radius: var(--radius-none);
+    margin-bottom: 16px;
+    font-family: var(--font-mono);
+    font-size: 0.80rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    border: 1px solid;
+}
+
+.alert-error {
+    background-color: var(--error-dim);
+    border-color: var(--error);
+    color: var(--error);
+}
+
+.alert-warning {
+    background-color: var(--warning-dim);
+    border-color: var(--warning);
+    color: var(--warning);
+}
+
+.alert-success {
+    background-color: var(--bright-green-dim);
+    border-color: var(--bright-green);
+    color: var(--bright-green);
+}
+
+.alert-info {
+    background-color: var(--raised-panel);
+    border-color: var(--border);
+    color: var(--text-secondary);
+}
+
+.badge {
+    display: inline-block;
+    padding: 2px 6px;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-radius: var(--radius-none);
+    border: 1px solid;
+}
+
+.badge-active, .badge-success {
+    background: var(--bright-green-dim);
+    border-color: var(--bright-green);
+    color: var(--bright-green);
+}
+
+.badge-expired, .badge-error {
+    background: var(--error-dim);
+    border-color: var(--error);
+    color: var(--error);
+}
+
+.badge-warning {
+    background: var(--warning-dim);
+    border-color: var(--warning);
+    color: var(--warning);
+}
+
+.badge-dim {
+    background: var(--raised-panel);
+    border-color: var(--border);
+    color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   CRYPTOGRAPHIC VERIFICATION PIPELINE STREAM
+   ========================================================================== */
+
+.verification-stream {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border);
+    margin: 16px 0;
+}
+
+.stream-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+}
+
+.stream-row:last-child {
+    border-bottom: none;
+}
+
+.stream-label {
+    color: var(--text-secondary);
+}
+
+.stream-status {
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   BOXY TERMINAL DROPZONE & FILE PREVIEW
+   ========================================================================== */
+
+.dropzone-box {
+    border: 1px dashed var(--border);
+    background-color: var(--bg-secondary);
+    padding: 36px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.dropzone-box:hover, .dropzone-box.dragover {
+    border-color: var(--bright-green);
+    background-color: #0c1810;
+}
+
+.dropzone-icon {
+    color: var(--bright-green);
+    margin-bottom: 8px;
+}
+
+/* Terminal benchmark / console output box */
+.terminal-output-box {
+    background: #020403;
+    border: 1px solid var(--border);
+    padding: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--bright-green);
+    height: 180px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    line-height: 1.4;
+}
+
+/* ==========================================================================
+   RESPONSIVE MOBILE BREAKPOINTS
+   ========================================================================== */
+
+@media (max-width: 840px) {
+    aside.vault-sidebar {
+        position: fixed;
+        left: -100%;
+        top: 0;
+        bottom: 0;
+        transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.9);
+    }
+
+    aside.vault-sidebar.open {
+        left: 0;
+    }
+
+    .mobile-nav-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .grid-2, .grid-3, .grid-4 {
+        grid-template-columns: 1fr;
+    }
+
+    main.vault-main {
+        padding: 16px;
+    }
+}

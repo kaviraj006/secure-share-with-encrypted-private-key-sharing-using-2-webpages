@@ -1,0 +1,27 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite
+*.db
+instance/
+
+# Storage
+storage/ciphertext/*
+!storage/ciphertext/.gitkeep
+
+# Environment
+.env
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Scratch / Experiments
+*.scratch.*
+from math import gcd.py
+import hashlib.py

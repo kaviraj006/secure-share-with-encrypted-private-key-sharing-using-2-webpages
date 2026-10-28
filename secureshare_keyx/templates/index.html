@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SecureShare // KEY EXCHANGE PORTAL</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <!-- Libsodium browser bundle -->
+  <script src="/static/js/vendor/sodium.js"></script>
+</head>
+<body>
+  <div id="app-container">
+    <!-- TOP HEADER -->
+    <header id="top-header">
+      <div class="brand-section">
+        <svg class="brand-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="2" width="28" height="28" stroke="#FF2020" stroke-width="2" />
+          <path d="M16 6 L25 11 L25 21 L16 26 L7 21 L7 11 Z" fill="#150202" stroke="#FF2020" stroke-width="1.5" />
+          <circle cx="16" cy="14" r="2.5" fill="#FF2020" />
+          <path d="M16 16.5 L16 21 M14 19 L18 19" stroke="#FF2020" stroke-width="1.5" />
+        </svg>
+        <span class="brand-title">SECURESHARE <span class="accent-red">// KEY EXCHANGE</span></span>
+        <span class="brand-badge">PORT 5001</span>
+      </div>
+
+      <div class="header-telemetry">
+        <div class="telemetry-item">
+          <span class="telemetry-indicator indicator-green pulse-anim" id="network-indicator"></span>
+          <span>SYSTEM: ONLINE</span>
+        </div>
+        <div class="telemetry-item" id="header-vault-status-item" style="cursor: pointer;" title="Click to unlock or view vault status">
+          <span class="telemetry-indicator" id="vault-indicator"></span>
+          <span id="vault-header-text">VAULT: LOCKED</span>
+        </div>
+        <div class="telemetry-item" id="file-vault-telemetry">
+          <span class="telemetry-indicator" id="filevault-indicator"></span>
+          <span id="filevault-header-text">FILE VAULT: PROBING...</span>
+        </div>
+        <div class="telemetry-item">
+          <span style="color: var(--text-dim);">PROTOCOL:</span>
+          <span style="color: #FFF;">X25519-HKDF-AES256GCM</span>
+        </div>
+      </div>
+
+      <div class="header-user-actions" id="user-nav-actions">
+        <!-- Rendered dynamically: login/register buttons or user chip -->
+        <button id="btn-header-auth" class="btn btn-primary btn-sm">AUTHENTICATE [LOGIN / REGISTER]</button>
+      </div>
+    </header>
+
+    <!-- MAIN VIEWPORT -->
+    <div id="main-viewport">
+      <!-- SIDEBAR -->
+      <aside id="sidebar">
+        <div class="nav-section-title">PORTAL NAVIGATION</div>
+        <ul class="sidebar-nav">
+          <li class="nav-item active" data-view="overview">
+            <a class="nav-link">
+              <span>[01] SYSTEM OVERVIEW</span>
+            </a>
+          </li>
+          <li class="nav-item" data-view="identity">
+            <a class="nav-link">
+              <span>[02] IDENTITY VAULT</span>
+              <span class="nav-badge" id="badge-identity-status">UNINITIALIZED</span>
+            </a>
+          </li>
+          <li class="nav-item" data-view="contacts">
+            <a class="nav-link">
+              <span>[03] TRUSTED CONTACTS</span>
+              <span class="nav-badge" id="badge-contacts-count">0</span>
+            </a>
+          </li>
+          <li class="nav-item" data-view="prekeys">
+            <a class="nav-link">
+              <span>[04] PUBLIC PREKEYS</span>
+              <span class="nav-badge" id="badge-prekeys-count">0</span>
+            </a>
+          </li>
+          <li class="nav-item" data-view="exchange">
+            <a class="nav-link">
+              <span>[05] KEY EXCHANGE TOOL</span>
+            </a>
+          </li>
+          <li class="nav-item" data-view="inbox">
+            <a class="nav-link">
+              <span>[06] ENVELOPE INBOX</span>
+              <span class="nav-badge badge-alert" id="badge-inbox-count" style="display: none;">0</span>
+            </a>
+          </li>
+          <li class="nav-item" data-view="history">
+            <a class="nav-link">
+              <span>[07] TRANSFER HISTORY</span>
+            </a>
+          </li>
+          <li class="nav-item" data-view="logs">
+            <a class="nav-link">
+              <span>[08] SECURITY AUDIT LOG</span>
+            </a>
+          </li>
+          <li class="nav-item" data-view="settings">
+            <a class="nav-link">
+              <span>[09] SYSTEM SETTINGS</span>
+            </a>
+          </li>
+        </ul>
+
+        <div class="sidebar-footer">
+          <div class="vault-status-box">
+            <div class="vault-status-header">
+              <span>LOCAL CRYPTO VAULT</span>
+              <span id="sidebar-vault-badge" class="status-pill status-danger">LOCKED</span>
+            </div>
+            <div style="font-size: 10px; color: var(--text-muted);" id="sidebar-vault-desc">
+              Browser IndexedDB Encrypted (PBKDF2-100k + AES-GCM)
+            </div>
+          </div>
+          <div style="display: flex; gap: 4px;">
+            <button id="btn-sidebar-wipe" class="btn btn-danger btn-sm" style="flex: 1;" title="Wipe local encryption keys from memory">WIPE MEMORY</button>
+            <button id="btn-sidebar-lock" class="btn btn-secondary btn-sm" style="flex: 1;">LOCK VAULT</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CONTENT CONTAINER -->
+      <main id="content-container">
+        
+        <!-- VIEW 1: SYSTEM OVERVIEW -->
+        <section class="view-pane active" id="view-overview">
+          <div class="view-header">
+            <div class="view-title-group">
+              <h1><span class="title-prefix">//</span> SYSTEM OVERVIEW</h1>
+              <div class="view-subtitle">End-to-End Cryptographic Key Exchange Dashboard</div>
+            </div>
+            <div class="view-actions">
+              <a href="http://127.0.0.1:5000" target="_blank" class="btn btn-secondary btn-sm">
+                <span>↗ OPEN SECURESHARE FILE VAULT (PORT 5000)</span>
+              </a>
+              <button class="btn btn-primary btn-sm" id="btn-quick-new-exchange">
+                <span>+ CREATE KEY ENVELOPE</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Notice banner if not logged in -->
+          <div class="security-callout callout-warning" id="overview-auth-banner">
+            <div class="callout-icon">▲</div>
+            <div>
+              <strong>AUTHENTICATION REQUIRED:</strong> You are currently unauthenticated. Please authenticate or register an identity to initialize your cryptographic vault and start exchanging keys.
+            </div>
+          </div>
+
+          <!-- Notice banner if logged in but vault is locked -->
+          <div class="security-callout callout-danger" id="overview-vault-locked-banner" style="display: none; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="callout-icon">▲</div>
+              <div>
+                <strong>VAULT LOCKED:</strong> Local keystore is locked. Enter your master passphrase to unlock identity keys and replenish prekeys.
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-banner-unlock-vault" style="margin-left: 16px; white-space: nowrap;">UNLOCK VAULT</button>
+          </div>
+
+          <!-- Notice banner if identity exists on server but local private key is missing -->
+          <div class="security-callout callout-danger" id="overview-recovery-banner" style="display: none; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="callout-icon">▲</div>
+              <div>
+                <strong>PRIVATE KEY MISSING IN BROWSER:</strong> A public identity is registered on the server, but the private signing key is missing from this device. Please restore your vault backup.
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-banner-restore-backup" style="margin-left: 16px; white-space: nowrap;">RESTORE BACKUP</button>
+          </div>
+
+          <!-- Stat Cards -->
+          <div class="grid-cols-4" style="margin-bottom: 24px;">
+            <div class="stat-card">
+              <div class="stat-label">IDENTITY STATUS</div>
+              <div class="stat-value" id="stat-identity-status">LOCKED</div>
+              <div class="stat-footer" id="stat-identity-sub">Ed25519 Signing Key</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">AVAILABLE PREKEYS</div>
+              <div class="stat-value accent-green" id="stat-prekeys-count">0</div>
+              <div class="stat-footer">One-Time Signed X25519</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">INBOX ENVELOPES</div>
+              <div class="stat-value accent-red" id="stat-inbox-count">0</div>
+              <div class="stat-footer">Pending Key Unwrapping</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">TRUSTED CONTACTS</div>
+              <div class="stat-value" id="stat-contacts-count">0</div>
+              <div class="stat-footer">Out-of-Band Verified</div>
+            </div>
+          </div>
+
+          <div class="grid-cols-2">
+            <!-- Left panel: Recent Inbound Envelopes -->
+            <div class="panel">
+              <div class="panel-header">
+                <span class="panel-title">PENDING KEY ENVELOPES</span>
+                <button class="btn btn-secondary btn-sm" id="btn-refresh-inbox">REFRESH</button>
+              </div>
+              <div id="overview-pending-inbox">
+                <div style="color: var(--text-dim); text-align: center; padding: 24px;">No pending incoming envelopes.</div>
+              </div>
+            </div>
+
+            <!-- Right panel: Quick Key Agreement -->
+            <div class="panel">
+              <div class="panel-header">
+                <span class="panel-title">CRYPTOGRAPHIC WORKFLOW ARCHITECTURE</span>
+              </div>
+              <div style="font-size: 11px; color: var(--text-muted); line-height: 1.6;">
+                <p style="margin-bottom: 8px;">
+                  <strong style="color: #FFF;">1. Out-of-Band Fingerprint Verification:</strong> Contacts are verified by comparing full SHA-256 fingerprints before exchanging keys to protect against Man-in-the-Middle (MitM) attacks.
+                </p>
+                <p style="margin-bottom: 8px;">
+                  <strong style="color: #FFF;">2. X25519 DH Agreement:</strong> Ephemeral sender key + recipient one-time signed prekey establish forward-secure raw shared secret.
+                </p>
+                <p style="margin-bottom: 8px;">
+                  <strong style="color: #FFF;">3. HKDF-SHA-256 Derivation:</strong> Key derivation binds sender ID, recipient ID, transfer ID, and prekey ID into a 256-bit wrapping key.
+                </p>
+                <p style="margin-bottom: 8px;">
+                  <strong style="color: #FFF;">4. AES-256-GCM Envelope:</strong> File key is wrapped with 12-byte nonce and authenticated additional data. Sealed envelope is signed with sender's Ed25519 key.
+                </p>
+                <p style="color: var(--green-term);">
+                  ✓ Zero-knowledge backend: Server never sees raw AES file keys or private identity keys.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 2: IDENTITY VAULT -->
+        <section class="view-pane" id="view-identity">
+          <div class="view-header">
+            <div class="view-title-group">
+              <h1><span class="title-prefix">//</span> IDENTITY VAULT</h1>
+              <div class="view-subtitle">Ed25519 Identity Signing Key, SHA-256 Fingerprint, and Vault Management</div>
+            </div>
+            <div class="view-actions">
+              <button class="btn btn-secondary btn-sm" id="btn-export-vault">EXPORT VAULT BACKUP</button>
+              <button class="btn btn-secondary btn-sm" id="btn-import-vault">RESTORE BACKUP</button>
+              <button class="btn btn-primary btn-sm" id="btn-gen-identity">GENERATE / ROTATE IDENTITY</button>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-bottom: 20px;">
+            <div class="panel-header">
+              <span class="panel-title">ACTIVE CRYPTOGRAPHIC IDENTITY</span>
+              <span class="status-pill status-verified" id="identity-card-badge">ACTIVE</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">IDENTITY FINGERPRINT (SHA-256 OUT-OF-BAND VERIFICATION STRING)</label>
+              <div class="key-box fingerprint-text" id="disp-identity-fingerprint">
+                -- NOT INITIALIZED --
+              </div>
+              <div class="key-actions">
+                <button class="btn btn-secondary btn-sm" id="btn-copy-fp">COPY FINGERPRINT</button>
+                <button class="btn btn-secondary btn-sm" id="btn-show-qr-my-fp">VIEW VERIFICATION QR</button>
+              </div>
+            </div>
+
+            <div class="grid-cols-2">
+              <div class="form-group">
+                <label class="form-label">ED25519 PUBLIC SIGNING KEY (HEX)</label>
+                <div class="key-box cell-mono-sm" id="disp-identity-pubkey">--</div>
+                <div class="key-actions">
+                  <button class="btn btn-secondary btn-sm" id="btn-copy-ed-pub">COPY PUBLIC KEY</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">LOCAL VAULT STORAGE STATUS</label>
+                <div class="key-box cell-mono-sm" id="disp-vault-storage-status">
+                  VAULT STATUS: SECURE IN INDEXEDDB
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="security-callout callout-info">
+            <div class="callout-icon">ℹ</div>
+            <div>
+              <strong>KEY ROTATION DISCLOSURE:</strong> When you rotate your Ed25519 identity key, your remote contacts will automatically detect the key change and mark your contact as <span style="color: var(--amber-warn); font-weight: 700;">KEY CHANGED</span>. They must re-verify your new fingerprint out-of-band before creating further key envelopes.
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 3: TRUSTED CONTACTS -->
+        <section class="view-pane" id="view-contacts">
+          <div class="view-header">
+            <div class="view-title-group">
+              <h1><span class="title-prefix">//</span> TRUSTED CONTACTS</h1>
+              <div class="view-subtitle">Public Key Discovery, Fingerprint Verification, and Key-Change Alerts</div>
+            </div>
+            <div class="view-actions">
+              <div class="input-with-button">
+                <input type="text" id="input-add-contact-username" placeholder="ENTER USERNAME..." style="width: 220px;">
+                <button class="btn btn-primary btn-sm" id="btn-add-contact">+ ADD CONTACT</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-bottom: 20px;">
+            <div class="panel-header">
+              <span class="panel-title">USER DIRECTORY & PUBLIC KEY SEARCH</span>
+            </div>
+            <div class="form-group" style="margin-bottom: 8px;">
+              <div class="input-with-button">
+                <input type="text" id="input-search-users" placeholder="SEARCH USERS BY USERNAME..." style="flex: 1;">
+                <button class="btn btn-secondary btn-sm" id="btn-search-users">SEARCH DIRECTORY</button>
+              </div>
+            </div>
+            <div id="search-users-results" style="display: none; margin-top: 10px; max-height: 180px; overflow-y: auto;">
+              <!-- Dynamic user search results -->
+            </div>
+          </div>
+
+          <div class="data-table-container">
+            <table class="data-table" id="table-contacts">
+              <thead>
+                <tr>
+                  <th>USERNAME</th>
+                  <th>VERIFICATION STATUS</th>
+                  <th>STORED FINGERPRINT</th>
+                  <th>VERIFIED AT</th>
+                  <th>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody id="contacts-table-body">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 20px;">Loading contacts...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- VIEW 4: PUBLIC PREKEYS -->
+        <section class="view-pane" id="view-prekeys">
+          <div class="view-header">
+            <div class="view-title-group">
+              <h1><span class="title-prefix">//</span> PUBLIC PREKEYS</h1>
+              <div class="view-subtitle">One-Time Signed X25519 Prekey Pool & Lifecycle Management</div>
+            </div>
+            <div class="view-actions">
+              <button class="btn btn-secondary btn-sm" id="btn-refresh-prekeys">REFRESH POOL</button>
+              <button class="btn btn-primary btn-sm" id="btn-replenish-prekeys">+ REPLENISH PREKEYS (BATCH OF 5)</button>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-bottom: 20px;">
+            <div class="panel-header">
+              <span class="panel-title">PREKEY POOL TELEMETRY</span>
+            </div>
+            <div class="grid-cols-3">
+              <div>
+                <span class="stat-label">AVAILABLE PREKEYS</span>
+                <div class="stat-value accent-green" id="disp-prekeys-avail">0</div>
+              </div>
+              <div>
+                <span class="stat-label">RESERVED PREKEYS</span>
+                <div class="stat-value" id="disp-prekeys-res">0</div>
+              </div>
+              <div>
+                <span class="stat-label">CONSUMED PREKEYS</span>
+                <div class="stat-value" id="disp-prekeys-cons">0</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="data-table-container">
+            <table class="data-table" id="table-prekeys">
+              <thead>
+                <tr>
+                  <th>PREKEY ID</th>
+                  <th>X25519 PUBLIC KEY</th>
+                  <th>STATUS</th>
+                  <th>CREATED AT</th>
+                  <th>EXPIRES AT</th>
+                  <th>ED25519 SIGNATURE PROOF</th>
+                </tr>
+              </thead>
+              <tbody id="prekeys-table-body">
+                <tr>
+                  <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 20px;">Loading prekeys...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- VIEW 5: KEY EXCHANGE TOOL -->
+        <section class="view-pane" id="view-exchange">
+          <div class="view-header">
+            <div class="view-title-group">
+              <h1><span class="title-prefix">//</span> KEY EXCHANGE TOOL</h1>
+              <div class="view-subtitle">Interactive X25519 Key Agreement, HKDF Wrapping, and Envelope Dispatch</div>
+            </div>
+          </div>
+
+          <div class="grid-cols-2">
+            <!-- Step 1 & 2: Recipient Discovery and File Key Input -->
+            <div class="panel">
+              <div class="panel-header">
+                <span class="panel-title">STEP 1: SELECT RECIPIENT & DISCOVER PREKEY</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">SELECT TRUSTED CONTACT</label>
+                <select id="exchange-recipient-select" style="margin-bottom: 8px;">
+                  <option value="">-- CHOOSE FROM VERIFIED CONTACTS --</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">OR ENTER RECIPIENT USERNAME DIRECTLY</label>
+                <div class="input-with-button">
+                  <input type="text" id="exchange-recipient-input" placeholder="e.g. alice_recipient">
+                  <button class="btn btn-secondary btn-sm" id="btn-exchange-discover">DISCOVER</button>
+                </div>
+              </div>
+
+              <div id="exchange-recipient-info" style="display: none; margin-bottom: 16px;">
+                <div class="key-box" style="margin-bottom: 8px;">
+                  <div><strong style="color: #FFF;">RECIPIENT ID:</strong> <span id="disp-recip-id"></span></div>
+                  <div><strong style="color: #FFF;">FINGERPRINT:</strong> <span id="disp-recip-fp" style="color: var(--red-primary);"></span></div>
+                  <div><strong style="color: #FFF;">PREKEY ID:</strong> <span id="disp-recip-pk-id"></span></div>
+                  <div><strong style="color: #FFF;">TRUST STATUS:</strong> <span id="disp-recip-trust" class="status-pill"></span></div>
+                </div>
+                <div id="recip-keychanged-warning" class="security-callout callout-danger" style="display: none;">
+                  <div class="callout-icon">▲</div>
+                  <div>
+                    <strong>CRITICAL SECURITY WARNING: KEY CHANGED!</strong> The remote public key fingerprint does NOT match your verified contact record. Possible Man-in-the-Middle attack or untrusted key rotation. Envelope sealing is BLOCKED until re-verified in Trusted Contacts.
+                  </div>
+                </div>
+                <div id="recip-unverified-warning" class="security-callout callout-warning" style="display: none;">
+                  <div class="callout-icon">▲</div>
+                  <div>
+                    <strong>WARNING:</strong> This contact has not been verified out-of-band! You risk a potential Man-in-the-Middle attack.
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel-header" style="margin-top: 20px;">
+                <span class="panel-title">STEP 2: AES-256 FILE KEY & TRANSFER ID</span>
+              </div>
+
+              <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <label class="form-label" style="margin-bottom: 0;">TRANSFER ID (FROM SECURESHARE PORT 5000 OR NEW)</label>
+                  <button type="button" class="btn btn-secondary btn-sm" id="btn-exchange-gen-tx" style="padding: 1px 6px; font-size: 10px;">+ NEW ID</button>
+                </div>
+                <input type="text" id="exchange-transfer-id" placeholder="e.g. tx_f9a8b7c6d5e4 or 7cfd2f27-9acb-43e4-831c-7c3d38b655c7">
+              </div>
+
+              <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <label class="form-label" style="margin-bottom: 0;">AES-256 FILE KEY (PASTE DIRECTLY OR AUTO-GENERATE)</label>
+                  <div style="display: flex; gap: 6px;">
+                    <button type="button" class="btn btn-secondary btn-sm" id="btn-exchange-paste-aes" style="padding: 2px 8px; font-size: 10px;">📋 PASTE KEY</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btn-exchange-auto-gen-aes" style="padding: 2px 8px; font-size: 10px;">⚡ AUTO-GENERATE KEY</button>
+                  </div>
+                </div>
+                <div class="input-with-button">
+                  <input type="text" id="exchange-file-key" placeholder="Paste your 64-character hex AES-256 file key here directly (or click Auto-Generate)..." style="font-family: var(--font-mono); font-size: 11px;">
+                  <button type="button" class="btn btn-secondary btn-sm" id="btn-exchange-gen-aes" title="Auto-generate a new random key">GENERATE</button>
+                </div>
+                <div id="exchange-key-status-box" class="key-box" style="display: flex; align-items: center; justify-content: space-between; margin-top: 6px; padding: 6px 10px;">
+                  <span id="exchange-key-status-text" style="color: var(--text-dim); font-size: 11px;">[PASTE 64-HEX KEY DIRECTLY OR CLICK AUTO-GENERATE]</span>
+                  <span id="exchange-key-length-badge" style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">0 / 64 hex chars</span>
+                </div>
+                <div style="font-size: 10px; color: var(--text-muted); line-height: 1.4; margin-top: 6px; padding: 4px 6px; background: rgba(0,0,0,0.2); border-left: 2px solid var(--red-primary);">
+                  <strong style="color: var(--red-primary);">DIRECT KEY PASTE:</strong> You can paste your 64-character hexadecimal file key directly into this box. The key will be sealed into the recipient's protected envelope using X25519-HKDF and signed with Ed25519.
+                </div>
+              </div>
+
+              <button class="btn btn-primary" id="btn-seal-and-dispatch" style="width: 100%; margin-top: 10px;" disabled>
+                SEAL ENVELOPE & DISPATCH KEY
+              </button>
+
+              <!-- Step 3: Confirmed Dispatch Card -->
+              <div id="exchange-result-card" class="panel" style="margin-top: 16px; border-color: var(--green-term); display: none;">
+                <div class="panel-header" style="background: rgba(0, 255, 65, 0.08);">
+                  <span class="panel-title" style="color: var(--green-term);">✓ KEY ENVELOPE DISPATCHED SUCCESSFULLY</span>
+                  <span class="status-pill status-verified">ACTIVE ENVELOPE</span>
+                </div>
+                <div style="padding: 12px; font-size: 11px; line-height: 1.6;">
+                  <div><strong style="color: #FFF;">TRANSFER ID:</strong> <span id="disp-result-tx" class="cell-mono-sm"></span></div>
+                  <div><strong style="color: #FFF;">RECIPIENT:</strong> <span id="disp-result-recip"></span></div>
+                  <div><strong style="color: #FFF;">ENVELOPE ID:</strong> <span id="disp-result-env-id" class="cell-mono-sm"></span></div>
+                  <div style="margin-top: 10px;">
+                    <a id="btn-return-filevault" href="http://127.0.0.1:5000" target="_blank" class="btn btn-primary btn-sm" style="display: inline-block;">
+                      ↗ RETURN TO FILE VAULT TRANSFER (PORT 5000)
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cryptographic Inspection Log -->
+            <div class="panel">
+              <div class="panel-header">
+                <span class="panel-title">REAL-TIME CRYPTOGRAPHIC PROTOCOL AUDIT</span>
+              </div>
+              <div class="key-box" id="exchange-crypto-audit-log" style="height: 380px; overflow-y: auto; font-size: 11px; line-height: 1.6; white-space: pre-wrap;">[AWAITING PARAMETERS]
+1. Select recipient to discover active Ed25519 identity and X25519 prekey.
+2. Provide transfer ID and 256-bit AES file key.
+3. System will generate ephemeral X25519 keypair.
+4. System will compute X25519 scalar multiplication.
+5. System will derive 256-bit wrapping key via HKDF-SHA-256.
+6. System will wrap AES key with AES-256-GCM and authenticated data.
+7. System will sign envelope with your Ed25519 identity key.
+8. Encrypted envelope will be dispatched to recipient.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 6: ENVELOPE INBOX -->
+        <section class="view-pane" id="view-inbox">
+          <div class="view-header">
+            <div class="view-title-group">
+              <h1><span class="title-prefix">//</span> ENVELOPE INBOX</h1>
+              <div class="view-subtitle">Incoming Key Envelopes Ready for Local Unwrapping</div>
+            </div>
+            <div class="view-actions">
+              <button class="btn btn-secondary btn-sm" id="btn-refresh-inbox-view">REFRESH INBOX</button>
+            </div>
+          </div>
+
+          <div class="data-table-container">
+            <table class="data-table" id="table-inbox">
+              <thead>
+                <tr>
+                  <th>TRANSFER ID</th>
+                  <th>SENDER</th>
+                  <th>TARGET PREKEY</th>
+                  <th>RECEIVED AT</th>
+                  <th>STATUS</th>
+                  <th>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody id="inbox-table-body">
+                <tr>
+                  <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 20px;">No envelopes in inbox.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Unwrapped Key Display Area -->
+          <div id="unwrapped-key-area" class="panel" style="margin-top: 24px; display: none;">
+            <div class="panel-header">
+              <span class="panel-title">UNWRAPPED FILE KEY (LOCAL MEMORY ONLY)</span>
+              <span class="status-pill status-verified">SIGNATURE VERIFIED</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">TRANSFER ID</label>
+              <div class="key-box cell-mono-sm" id="disp-unwrapped-tx">--</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">PLAINTEXT AES-256-GCM FILE KEY (HEX)</label>
+              <div class="key-box cell-mono-sm" id="disp-unwrapped-key" style="color: var(--green-term); font-size: 14px; font-weight: 700;">--</div>
+              <div class="key-actions">
+                <button class="btn btn-secondary btn-sm" id="btn-copy-unwrapped-key">COPY AES KEY</button>
+                <a id="btn-link-fileshare" href="http://127.0.0.1:5000" target="_blank" class="btn btn-primary btn-sm">
+                  ↗ USE IN SECURESHARE FILE DECRYPTION (PORT 5000)
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 7: TRANSFER HISTORY -->
+        <section class="view-pane" id="view-history">
+          <div class="view-header">
+            <div class="view-title-group">
+              <h1><span class="title-prefix">//</span> TRANSFER HISTORY</h1>
+              <div class="view-subtitle">Complete Audit Record of Sent and Received Key Envelopes</div>
+            </div>
+            <div class="view-actions" style="align-items: center; gap: 8px;">
+              <input type="text" id="input-history-search" placeholder="SEARCH TRANSFERS..." style="width: 170px; padding: 4px 8px; font-size: 11px;">
+              <button class="btn btn-primary btn-sm" id="btn-filter-history-all">ALL</button>
+              <button class="btn btn-secondary btn-sm" id="btn-filter-history-sent">SENT</button>
+              <button class="btn btn-secondary btn-sm" id="btn-filter-history-recv">RECEIVED</button>
+              <button class="btn btn-secondary btn-sm" id="btn-refresh-history">REFRESH</button>
+            </div>
+          </div>
+
+          <div class="panel" id="panel-history-sent" style="margin-bottom: 20px;">
+            <div class="panel-header">
+              <span class="panel-title">SENT ENVELOPES (OUTBOUND)</span>
+            </div>
+            <div class="data-table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>TRANSFER ID</th>
+                    <th>RECIPIENT</th>
+                    <th>TARGET PREKEY</th>
+                    <th>CREATED AT</th>
+                    <th>STATUS</th>
+                    <th>ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody id="history-sent-body">
+                  <tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 15px;">No sent transfers.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel" id="panel-history-received">
+            <div class="panel-header">
+              <span class="panel-title">RECEIVED ENVELOPES (INBOUND)</span>
+            </div>
+            <div class="data-table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>TRANSFER ID</th>
+                    <th>SENDER</th>
+                    <th>PREKEY CONSUMED</th>
+                    <th>CREATED AT</th>
+                    <th>STATUS</th>
+                    <th>ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody id="history-received-body">
+                  <tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 15px;">No received transfers.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 8: SECURITY AUDIT LOG -->
+        <section class="view-pane" id="view-logs">
+          <div class="view-header">
+            <div class="view-title-group">
+              <h1><span class="title-prefix">//</span> SECURITY AUDIT LOG</h1>
+              <div class="view-subtitle">Safe Immutable Audit Trail of Cryptographic and Authentication Events</div>
+            </div>
+            <div class="view-actions" style="align-items: center; gap: 8px;">
+              <input type="text" id="input-logs-search" placeholder="SEARCH LOGS..." style="width: 170px; padding: 4px 8px; font-size: 11px;">
+              <select id="select-logs-filter" style="width: 140px; padding: 4px 8px; font-size: 11px;">
+                <option value="">ALL EVENTS</option>
+                <option value="AUTH">AUTHENTICATION</option>
+                <option value="KEY">KEY OPERATIONS</option>
+                <option value="ENVELOPE">ENVELOPES</option>
+                <option value="PREKEY">PREKEYS</option>
+              </select>
+              <button class="btn btn-secondary btn-sm" id="btn-refresh-logs">REFRESH AUDIT LOG</button>
+            </div>
+          </div>
+
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>TIMESTAMP (UTC)</th>
+                  <th>ACTOR</th>
+                  <th>EVENT TYPE</th>
+                  <th>RESULT</th>
+                  <th>EVENT DETAILS</th>
+                </tr>
+              </thead>
+              <tbody id="security-logs-body">
+                <tr><td colspan="5" style="text-align: center; color: var(--text-dim); padding: 20px;">Loading audit events...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- VIEW 9: SYSTEM SETTINGS -->
+        <section class="view-pane" id="view-settings">
+          <div class="view-header">
+            <div class="view-title-group">
+              <h1><span class="title-prefix">//</span> SYSTEM SETTINGS</h1>
+              <div class="view-subtitle">Configuration, Security Disclosures, and Emergency Operations</div>
+            </div>
+          </div>
+
+          <div class="grid-cols-2" style="margin-bottom: 20px;">
+            <div class="panel">
+              <div class="panel-header">
+                <span class="panel-title">THREAT MODEL & ZERO-KNOWLEDGE BOUNDARIES</span>
+              </div>
+              <div style="font-size: 11px; color: var(--text-muted); line-height: 1.6;">
+                <p style="margin-bottom: 10px;">
+                  <strong style="color: #FFF;">Cryptographic Boundary:</strong> Private keys (Ed25519 identity key, X25519 prekey private keys, ephemeral secrets) are generated and stored strictly inside the browser vault (IndexedDB encrypted with PBKDF2-100,000 + AES-256-GCM).
+                </p>
+                <p style="margin-bottom: 10px;">
+                  <strong style="color: #FFF;">Server Role:</strong> The Flask backend on Port 5001 operates as an untrusted public-key directory, one-time prekey registry, and encrypted envelope mailbox.
+                </p>
+                <p style="margin-bottom: 10px;">
+                  <strong style="color: #FFF;">Inter-Portal Handoff:</strong> SecureShare File Storage (Port 5000) stores encrypted ciphertexts. SecureShare Key Exchange (Port 5001) coordinates authenticated key delivery.
+                </p>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <span class="panel-title">EMERGENCY VAULT CONTROLS</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">MEMORY ZEROIZATION</label>
+                <p style="color: var(--text-muted); font-size: 11px; margin-bottom: 10px;">
+                  Purges all active cryptographic keys from JavaScript heap memory and locks the local vault.
+                </p>
+                <button class="btn btn-danger btn-sm" id="btn-settings-wipe">ZEROIZE ALL KEYS IN MEMORY</button>
+              </div>
+
+              <div class="form-group" style="margin-top: 20px;">
+                <label class="form-label">VAULT RE-ENCRYPTION</label>
+                <p style="color: var(--text-muted); font-size: 11px; margin-bottom: 10px;">
+                  Change your local vault master passphrase. Re-encrypts your stored Ed25519 and X25519 private keys.
+                </p>
+                <button class="btn btn-secondary btn-sm" id="btn-settings-change-pass">CHANGE VAULT PASSPHRASE</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid-cols-2">
+            <div class="panel">
+              <div class="panel-header">
+                <span class="panel-title">AUTHENTICATED IDENTITY TELEMETRY</span>
+              </div>
+              <div style="font-size: 11px; line-height: 1.8;">
+                <div><span style="color: var(--text-dim);">USERNAME:</span> <strong id="settings-user-name" style="color: #FFF;">--</strong></div>
+                <div><span style="color: var(--text-dim);">USER ID:</span> <span id="settings-user-id" class="cell-mono-sm" style="color: var(--text-muted);">--</span></div>
+                <div><span style="color: var(--text-dim);">ROLE:</span> <span style="color: var(--green-term); font-weight: 700;">AUTHENTICATED CRYPTOGRAPHIC AGENT</span></div>
+                <div><span style="color: var(--text-dim);">KEY STORAGE:</span> <span style="color: #FFF;">BROWSER INDEXEDDB (AES-256-GCM)</span></div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <span class="panel-title">SECURESHARE FILE VAULT (PORT 5000) PROBE</span>
+              </div>
+              <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+                Tests connectivity to the sibling SecureShare File Storage server at <code>http://127.0.0.1:5000</code>.
+              </p>
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <span style="font-size: 11px; color: var(--text-dim);">SERVICE ENDPOINT:</span>
+                <span id="settings-filevault-status-pill" class="status-pill status-unverified">PROBING...</span>
+              </div>
+              <button class="btn btn-secondary btn-sm" id="btn-test-filevault-connection" style="width: 100%;">
+                PROBE FILE VAULT CONNECTION
+              </button>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL DIALOGS
+       ========================================================================== -->
+
+  <!-- AUTH MODAL -->
+  <div class="modal-backdrop" id="modal-auth">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>// SECURITY AUTHENTICATION</span>
+          <span class="badge" id="auth-modal-mode-badge">LOGIN</span>
+        </div>
+        <button class="modal-close-btn" data-modal-close>&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+          <button class="btn btn-primary btn-sm" id="tab-auth-login" style="flex: 1;">LOGIN</button>
+          <button class="btn btn-secondary btn-sm" id="tab-auth-register" style="flex: 1;">REGISTER</button>
+        </div>
+
+        <form id="form-auth">
+          <div class="form-group" id="group-auth-username">
+            <label class="form-label">USERNAME</label>
+            <input type="text" id="auth-username" required autocomplete="username">
+          </div>
+          <div class="form-group" id="group-auth-email" style="display: none;">
+            <label class="form-label">EMAIL ADDRESS</label>
+            <input type="email" id="auth-email" autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label class="form-label">ACCOUNT PASSWORD</label>
+            <input type="password" id="auth-password" required autocomplete="current-password">
+          </div>
+          <div class="form-group">
+            <label class="form-label">LOCAL VAULT PASSPHRASE (ENCRYPTS YOUR PRIVATE KEYS)</label>
+            <input type="password" id="auth-vault-passphrase" required placeholder="Master passphrase for browser vault...">
+            <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">
+              Your vault passphrase is never transmitted to the server.
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="btn-submit-auth" style="width: 100%;">
+            AUTHENTICATE & UNLOCK VAULT
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINGERPRINT VERIFICATION MODAL -->
+  <div class="modal-backdrop" id="modal-verify-contact">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>// OUT-OF-BAND FINGERPRINT VERIFICATION</span>
+          <span class="badge">MITM DEFENSE</span>
+        </div>
+        <button class="modal-close-btn" data-modal-close>&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+          Compare the fingerprint below with the contact via a trusted out-of-band channel (Signal, phone call, in-person QR scan) to verify their identity.
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">TARGET USERNAME</label>
+          <div class="key-box cell-mono-sm" id="verify-modal-username">--</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">REMOTE ED25519 PUBLIC KEY FINGERPRINT (SHA-256)</label>
+          <div class="key-box fingerprint-text" id="verify-modal-fingerprint">--</div>
+        </div>
+
+        <div class="qr-container">
+          <canvas id="verify-modal-qr-canvas" class="qr-canvas"></canvas>
+          <div style="font-size: 10px; color: var(--text-dim); margin-top: 8px;">VISUAL FINGERPRINT TOKEN</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">CONFIRM OUT-OF-BAND VERIFICATION</label>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="checkbox" id="verify-modal-confirm-check" style="width: 16px; height: 16px;">
+            <label for="verify-modal-confirm-check" style="font-size: 11px; color: #FFF; cursor: pointer;">
+              I have verified this fingerprint via an independent, secure channel.
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-modal-close>CANCEL</button>
+        <button class="btn btn-primary btn-sm" id="btn-modal-mark-verified" disabled>MARK AS VERIFIED</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPORT VAULT MODAL -->
+  <div class="modal-backdrop" id="modal-export-vault">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>// EXPORT ENCRYPTED VAULT BACKUP</span>
+        </div>
+        <button class="modal-close-btn" data-modal-close>&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-muted); margin-bottom: 14px;">
+          Exports your Ed25519 identity key, active prekeys, and contacts into a password-protected <code>.secureshare-keyx</code> file.
+        </p>
+        <div class="form-group">
+          <label class="form-label">BACKUP ENCRYPTION PASSPHRASE</label>
+          <input type="password" id="input-export-backup-pass" placeholder="Enter passphrase to encrypt backup file...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-modal-close>CANCEL</button>
+        <button class="btn btn-primary btn-sm" id="btn-modal-run-export">DOWNLOAD ENCRYPTED BACKUP</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPORT VAULT MODAL -->
+  <div class="modal-backdrop" id="modal-import-vault">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>// RESTORE VAULT FROM BACKUP</span>
+        </div>
+        <button class="modal-close-btn" data-modal-close>&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">SELECT .SECURESHARE-KEYX FILE</label>
+          <input type="file" id="input-import-file" accept=".secureshare-keyx,.json">
+        </div>
+        <div class="form-group">
+          <label class="form-label">BACKUP PASSPHRASE</label>
+          <input type="password" id="input-import-pass" placeholder="Enter backup passphrase...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-modal-close>CANCEL</button>
+        <button class="btn btn-primary btn-sm" id="btn-modal-run-import">RESTORE VAULT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- UNLOCK VAULT MODAL -->
+  <div class="modal-backdrop" id="modal-unlock-vault">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>// UNLOCK CRYPTOGRAPHIC VAULT</span>
+          <span class="badge">LOCAL SECURITY</span>
+        </div>
+        <button class="modal-close-btn" data-modal-close>&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-muted); margin-bottom: 14px;">
+          Enter your local master passphrase to decrypt your Ed25519 identity key and X25519 prekey pool in browser memory.
+        </p>
+        <form id="form-unlock-vault">
+          <div class="form-group">
+            <label class="form-label">VAULT MASTER PASSPHRASE</label>
+            <input type="password" id="input-unlock-vault-pass" required placeholder="Enter vault passphrase..." autocomplete="current-password">
+          </div>
+          <button type="submit" class="btn btn-primary" id="btn-submit-unlock-vault" style="width: 100%;">
+            UNLOCK VAULT
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- WIPE MEMORY CONFIRM MODAL -->
+  <div class="modal-backdrop" id="modal-wipe-confirm">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>// CONFIRM MEMORY ZEROIZATION</span>
+          <span class="badge">EMERGENCY PURGE</span>
+        </div>
+        <button class="modal-close-btn" data-modal-close>&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="security-callout callout-danger" style="margin-bottom: 14px;">
+          <div class="callout-icon">▲</div>
+          <div>
+            <strong>ZEROIZATION DISCLOSURE:</strong> All decrypted Ed25519 signing keys, X25519 prekeys, and raw AES file keys currently resident in JavaScript heap memory will be overwritten with cryptographically random bytes, dereferenced, and purged. Your local vault will be locked immediately.
+          </div>
+        </div>
+        <p style="color: var(--text-muted); font-size: 11px;">
+          Note: Your encrypted keys remain stored safely in IndexedDB and can be accessed again using your master passphrase.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-modal-close>CANCEL</button>
+        <button class="btn btn-danger btn-sm" id="btn-modal-confirm-wipe">PURGE ALL KEYS FROM MEMORY</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHANGE PASSPHRASE MODAL -->
+  <div class="modal-backdrop" id="modal-change-pass">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>// RE-ENCRYPT VAULT PASSPHRASE</span>
+        </div>
+        <button class="modal-close-btn" data-modal-close>&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-muted); margin-bottom: 14px;">
+          Re-encrypts all stored identity and prekey credentials in IndexedDB using a new PBKDF2-derived AES-GCM wrapping key.
+        </p>
+        <form id="form-change-pass">
+          <div class="form-group">
+            <label class="form-label">CURRENT PASSPHRASE</label>
+            <input type="password" id="input-change-old-pass" required placeholder="Enter current passphrase...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">NEW PASSPHRASE</label>
+            <input type="password" id="input-change-new-pass" required placeholder="Enter new passphrase...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">CONFIRM NEW PASSPHRASE</label>
+            <input type="password" id="input-change-confirm-pass" required placeholder="Confirm new passphrase...">
+          </div>
+          <button type="submit" class="btn btn-primary" id="btn-submit-change-pass" style="width: 100%;">
+            UPDATE VAULT ENCRYPTION
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSFER DETAIL MODAL -->
+  <div class="modal-backdrop" id="modal-transfer-detail">
+    <div class="modal-box" style="max-width: 650px;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>// KEY ENVELOPE AUDIT RECORD</span>
+          <span class="badge" id="transfer-detail-badge">INSPECT</span>
+        </div>
+        <button class="modal-close-btn" data-modal-close>&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid-cols-2" style="margin-bottom: 14px;">
+          <div>
+            <div class="stat-label">TRANSFER ID</div>
+            <div class="cell-mono-sm" id="detail-tx-id" style="color: #FFF; font-weight: 700; word-break: break-all;">--</div>
+          </div>
+          <div>
+            <div class="stat-label">STATUS</div>
+            <div id="detail-tx-status">--</div>
+          </div>
+        </div>
+
+        <div class="grid-cols-2" style="margin-bottom: 14px;">
+          <div>
+            <div class="stat-label">SENDER</div>
+            <div class="cell-mono-sm" id="detail-tx-sender">--</div>
+          </div>
+          <div>
+            <div class="stat-label">RECIPIENT</div>
+            <div class="cell-mono-sm" id="detail-tx-recipient">--</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">RECIPIENT PREKEY ID CONSUMED</label>
+          <div class="key-box cell-mono-sm" id="detail-tx-prekey">--</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">ENCRYPTED ENVELOPE METADATA (AES-256-GCM + NONCE)</label>
+          <div class="key-box cell-mono-sm" id="detail-tx-envelope" style="max-height: 120px; overflow-y: auto;">--</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">ED25519 SENDER DIGITAL SIGNATURE PROOF</label>
+          <div class="key-box cell-mono-sm" id="detail-tx-sig">--</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-modal-close>CLOSE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container"></div>
+
+  <!-- Main JavaScript App module -->
+  <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>

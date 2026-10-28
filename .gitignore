@@ -1,0 +1,34 @@
+# Python virtual environments & bytecode
+.venv/
+*/.venv/
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Databases & local storage
+*.sqlite
+*.sqlite3
+*.db
+**/instance/
+
+# Storage payloads (prevent committing uploaded ciphertexts)
+**/storage/ciphertext/*
+!**/storage/ciphertext/.gitkeep
+
+# Environment secrets & local config
+.env
+**/.env
+.env.local
+
+# Node.js dependencies
+node_modules/
+**/node_modules/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Backup & scratch files
+*.bak
+*.scratch.*

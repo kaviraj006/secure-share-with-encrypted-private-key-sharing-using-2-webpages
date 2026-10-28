@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SECURESHARE // FILE VAULT — Zero-Knowledge Cryptographic Transfer</title>
+    <meta name="description" content="Cinematic dark-green cybersecurity file vault with AES-256-GCM, X25519, Ed25519, and HKDF-SHA-256 browser cryptography.">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="vault-body">
+    <!-- Main Boxy Application Shell: Desktop Left Sidebar + Mobile Responsive Header -->
+    <div class="vault-shell">
+        <!-- Boxy Left Sidebar Navigation -->
+        <aside id="vault-sidebar" class="vault-sidebar"></aside>
+
+        <!-- Main Workspace Area -->
+        <div class="vault-workspace">
+            <!-- Top Telemetry & Status Bar -->
+            <header id="vault-topbar" class="vault-topbar"></header>
+
+            <!-- Main Dynamic View Container -->
+            <main id="app" class="vault-main"></main>
+
+            <!-- Boxy Terminal Footer -->
+            <footer class="vault-footer">
+                <div class="footer-terminal-line">
+                    <span class="prompt-symbol mono">&gt;_</span>
+                    <span class="mono">SECURESHARE // FILE VAULT v2.4.0</span>
+                    <span class="footer-sep">|</span>
+                    <span class="mono">AES-256-GCM • X25519 • ED25519 • HKDF-SHA256</span>
+                    <span class="footer-sep">|</span>
+                    <span class="mono" id="footer-live-clock">UTC --:--:--</span>
+                    <span class="footer-sep">|</span>
+                    <span class="mono status-indicator-text" id="footer-keyx-status">PORTAL: CHECKING...</span>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container"></div>
+
+    <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>
